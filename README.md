@@ -4,8 +4,18 @@ Starter-repo för DV1677 JavaScript-baserade webbramverk HT26.
 
 ett exempel som är en server-renderad texteditor byggd med Express och SQLite. Under kursens gång byggs den om/refaktoreras.
 
-## Kom igång
+## Krav
 
+> **OBS: Kräver Node.js 22.23 eller högre.**
+> `better-sqlite3` använder nativa binärer kompilerade för en specifik Node-version — äldre 22.x (t.ex. 22.11) ger `Segmentation fault` vid start.
+>
+> Uppgradera med nvm:
+> ```bash
+> nvm install 22.23
+> nvm use 22.23
+> ```
+
+## Kom igång
 
 ```bash
 npm install

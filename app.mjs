@@ -19,11 +19,6 @@ if (process.env.NODE_ENV !== 'test') {
     app.use(morgan('combined'));
 }
 
-app.put('/:id', async (req, res) => {
-    const result = await documents.updateOne(req.params.id, req.body);
-    return res.json(result);
-});
-
 app.post("/", async (req, res) => {
     const result = await documents.addOne(req.body);
     return res.redirect(`/${result.lastID}`);

@@ -19,9 +19,18 @@ if (process.env.NODE_ENV !== 'test') {
     app.use(morgan('combined'));
 }
 
+app.get("/new", (req, res) => {
+    res.render("new", { doc: {} });
+});
+
 app.post("/", async (req, res) => {
     const result = await documents.addOne(req.body);
     return res.redirect(`/${result.lastID}`);
+});
+
+app.post("/update", async (req, res) => {
+    const result = await documents.updateOne(req.body);
+    return res.redirect(`/${req.body.id}`);
 });
 
 app.get('/:id', async (req, res) => {

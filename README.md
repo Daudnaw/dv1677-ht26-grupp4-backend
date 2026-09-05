@@ -39,9 +39,12 @@ npm start
 
 `PORT` - porten som Express lyssnar på -> `3000`
 
-## Teknikstack
+## Att göra
+Namn på alla gruppmedlemmar (för- och efternamn + GitHub-användarnamn)
+Projektval: vilket startrepo ni valt och en kort motivering
+Teknikval: vilket frontend-ramverk ni planerar och varför
 
-- [node](https://nodejs.org)
-- [Express](https://expressjs.com)
-- [SQLite](https://www.sqlite.org) (byts ut mot MongoDB)
-- [EJS](https://ejs.co) (byts ut mot frontend-ramverk)
+Tillvägagångssätt: Vi fick några vulnerabvulnerabilities när vi körde npm install. npm audit rapport avslöjade flera vulnerabilities och de flesta av dem kunde fixats med npm audit fix. Tre av dem kunde inte fixas med fix men genom att uppdatera qs kunde vi fixa resterande 3 vulnerabilities också. Nu har vi 0 vulnerabilities.
+
+Instruktioner för att köra appen lokalt (npm install && npm start)
+behöver vi skriva något här, det är ju redan nämnt ovan.

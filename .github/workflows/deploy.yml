@@ -46,8 +46,8 @@ jobs:
 
             cat > .env << EOF
             MONGODB_URI=${{ secrets.MONGODB_URI }}
-            DATABASE_NAME=${{ secrets.DATABASE_NAME }}
-            COLLECTION_NAME=${{ secrets.COLLECTION_NAME }}
+            DATABASE_NAME=jsramverk
+            COLLECTION_NAME=documents
             EOF
 
             # Alternativ A: imagen är publik — ingen inloggning behövs

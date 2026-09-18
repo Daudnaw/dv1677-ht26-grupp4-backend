@@ -44,6 +44,12 @@ jobs:
           script: |
             cd ~/dv1677-ht26-grupp4-backend
 
+            cat > .env << EOF
+            MONGODB_URI=${{ secrets.MONGODB_URI }}
+            DATABASE_NAME=${{ secrets.DATABASE_NAME }}
+            COLLECTION_NAME=${{ secrets.COLLECTION_NAME }}
+            EOF
+
             # Alternativ A: imagen är publik — ingen inloggning behövs
             # Alternativ B: imagen är privat — kommentera bort raden nedan
             # echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin

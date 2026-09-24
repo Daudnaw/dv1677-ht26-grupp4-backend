@@ -1,4 +1,114 @@
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { readFileSync } from 'fs'
+import request from 'supertest'
+import { MongoMemoryServer } from 'mongodb-memory-server'
+import app from '../db/app.js'
+import { connectDB, closeDB } from '../db/database.js'
 
+let mongod;
+let documentId;
+
+beforeAll(async () => {
+  mongod = await MongoMemoryServer.create()
+  process.env.MONGODB_URI = mongod.getUri()
+  process.env.DATABASE_NAME = 'jsramverk_test'
+
+  // Seed med kursdata så att testerna har något att arbeta med
+  const docs = JSON.parse(readFileSync('db/document.json', 'utf-8'))
+  const db = await connectDB();
+  await db.collection('documents').insertMany(docs)
+})
+
+afterAll(async () => {
+  await closeDB()
+  await mongod.stop()
+})
+
+describe('documents', () => {
+    describe('GET /api/documents', () => {
+        it('200 HAPPY PATH', async () => {
+            const res = await request(app)
+                .get('/api/documents');
+
+            expect(res.status).toBe(200);
+            expect(res.body).toBeInstanceOf(Array);
+            expect(res.body).toHaveLength(3);
+        });
+    });
+
+    describe('POST /api/documents', () => {
+        it('201 Creating document', async () => {
+            const data = {
+                title: 'doc_1',
+                content: 'i have one content'
+            };
+
+            const res = await request(app)
+                .post('/api/documents')
+                .send(data);
+
+            expect(res.status).toBe(201);
+            expect(res.body).toBeInstanceOf(Object);
+            expect(res.body).toHaveProperty('_id');
+
+            expect(res.body.title).toBe('doc_1');
+            expect(res.body.content).toBe('i have one content');
+
+            documentId = res.body._id;
+        });
+
+        it('200 Fetching the newly created document', async () => {
+            const res = await request(app)
+                .get('/api/documents');
+
+            expect(res.status).toBe(200);
+            expect(res.body).toBeInstanceOf(Array);
+            expect(res.body).toHaveLength(4);
+
+            const document = res.body.find(
+                doc => doc._id === documentId
+            );
+
+            expect(document).toBeDefined();
+            expect(document.title).toBe('doc_1');
+            expect(document.content).toBe('i have one content');
+        });
+    });
+
+    describe('PUT /api/documents/:id', () => {
+        it('200 Updating document', async () => {
+            const data = {
+                title: 'doc_1 updated',
+                content: 'updated content'
+            };
+
+            const res = await request(app)
+                .put(`/api/documents/${documentId}`)
+                .send(data);
+
+            expect(res.status).toBe(200);
+            expect(res.body).toBeInstanceOf(Object);
+            expect(res.body).toHaveProperty('_id');
+            expect(res.body.title).toBe('doc_1 updated');
+            expect(res.body.content).toBe('updated content');
+        });
+    });
+
+    describe('DELETE /api/delete/:id', () => {
+        it('200 Deleting document', async () => {
+            const res = await request(app)
+                .delete(`/api/delete/${documentId}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body).toBeInstanceOf(Object);
+            expect(res.body).toHaveProperty('message');
+            expect(res.body.message).toBe('Document deleted');
+        });
+    });
+});
+
+
+/**
 process.env.NODE_ENV = 'test';
 
 import * as chai from 'chai';
@@ -119,3 +229,4 @@ describe('documents', () => {
         });
     });
 });
+ */

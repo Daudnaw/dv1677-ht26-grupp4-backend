@@ -2,16 +2,22 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { readFileSync } from 'fs'
 import request from 'supertest'
 import { MongoMemoryServer } from 'mongodb-memory-server'
-import app from '../db/app.js'
+//import app from '../db/app.js'
 import { connectDB, closeDB } from '../db/database.js'
 
 let mongod;
 let documentId;
+let app;
 
 beforeAll(async () => {
+  process.env.COLLECTION_NAME = 'documents';
+
   mongod = await MongoMemoryServer.create()
   process.env.MONGODB_URI = mongod.getUri()
   process.env.DATABASE_NAME = 'jsramverk_test'
+
+  const module = await import('../db/app.js');
+  app = module.default;
 
   // Seed med kursdata så att testerna har något att arbeta med
   const docs = JSON.parse(readFileSync('db/document.json', 'utf-8'))

@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Starter project for DV1677 JSRamverk",
   "type": "module",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "test": "NODE_OPTIONS='--import=dotenv/config' nyc --reporter=html --reporter=text --reporter=clover mocha --exit --timeout 10000",
-    "start": "node --env-file=.env db/app.js",
+    "test": "node --env-file=.env ./node_modules/vitest/vitest.mjs run",
+    "start": "node --env-file=.env db/server.js",
     "seed": "node --env-file=.env db/seed.js"
   },
   "keywords": [],
@@ -24,13 +24,16 @@
     "morgan": "^1.10.0"
   },
   "devDependencies": {
-    "chai": "^6.0.1",
-    "chai-http": "^5.1.2",
-    "mocha": "^11.7.2",
+    "mongodb-memory-server": "^10.0.0",
     "nodemon": "^3.0.1",
-    "nyc": "^17.1.0"
+    "supertest": "^7.0.0",
+    "vitest": "^2.0.0"
   },
   "overrides": {
     "qs": "6.16.0"
+  },
+  "allowScripts": {
+    "mongodb-memory-server@10.4.3": true,
+    "esbuild@0.21.5": true
   }
 }

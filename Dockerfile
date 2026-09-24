@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["node", "db/app.js"]
+CMD ["node", "db/server.js"]

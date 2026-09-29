@@ -1,24 +1,45 @@
-import db from './db/database.mjs';
+import { ObjectId } from 'mongodb';
+import { connectDB } from './db/database.js';
 
-const docs = {
-    getAll: async function getAll() {
-        return db.prepare('SELECT * FROM documents').all();
-    },
-    getOne: async function getOne(id) {
-        return db.prepare('SELECT * FROM documents WHERE id = ?').get(id) || {};
-    },
-    addOne: async function addOne(body) {
-        const result = db.prepare(
-            'INSERT INTO documents (title, content) VALUES (?, ?)'
-        ).run(body.title, body.content);
-        return { lastID: result.lastInsertRowid };
-    },
-    updateOne: async function updateOne(body) {
-        return db.prepare(
-            'UPDATE documents SET title = ?, content = ? WHERE id = ?'
-        ).run(body.title, body.content, body.id);
-    }
+const COLLECTION_NAME = process.env.COLLECTION_NAME;
 
-};
+async function getCollection() {
+    const db = await connectDB();
 
-export default docs;
+    return db.collection(COLLECTION_NAME);
+}
+
+export async function getAll() {
+    const collection = await getCollection();
+
+    return await collection.find({}).toArray();
+}
+
+export async function getOne(id) {
+    const collection = await getCollection();
+
+    return await collection.findOne({
+        _id: new ObjectId(id)
+    });
+}
+
+export async function addOne(document) {
+    const collection = await getCollection();
+
+    const result = await collection.insertOne(document);
+
+    return result;
+}
+
+export async function updateOne(document) {
+    const collection = await getCollection();
+
+    const id = document.id || document._id;
+
+    const { id: _, _id: __, ...data } = document;
+
+    return await collection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: data }
+    );
+}

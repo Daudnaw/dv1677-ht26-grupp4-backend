@@ -1,25 +1,12 @@
 services:
-    backend:
-        build: .
+    app:
+        image: ghcr.io/daudnaw/dv1677-ht26-grupp4-backend:latest
+        container_name: dv1677-ht26-grupp4-backend
         ports:
-            - "${PORT:-3000}:3000"
+            - '3000:3000'
         environment:
             PORT: 3000
-            MONGODB_URI: mongodb://root:secret@mongodb:27017/
-            DATABASE_NAME: jsramverk
-        depends_on:
-            - mongodb
+            MONGODB_URI: ${MONGODB_URI}
+            DATABASE_NAME: ${DATABASE_NAME}
+            COLLECTION_NAME: ${COLLECTION_NAME}
         restart: unless-stopped
-
-    mongodb:
-        image: mongo:latest
-        ports:
-            - "27017:27017"
-        environment:
-            MONGO_INITDB_ROOT_USERNAME: root
-            MONGO_INITDB_ROOT_PASSWORD: secret
-        volumes:
-            - mongodbdata:/data/db
-
-volumes:
-    mongodbdata:

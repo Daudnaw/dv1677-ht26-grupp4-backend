@@ -3,7 +3,7 @@ import { readFileSync } from 'fs'
 import request from 'supertest'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 //import app from '../db/app.js'
-import { connectDB, closeDB } from '../db/database.js'
+import connectDB, { closeDB } from '../db/database.js';
 
 let mongod;
 let documentId;

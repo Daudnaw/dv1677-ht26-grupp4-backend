@@ -9,4 +9,5 @@ services:
             MONGODB_URI: ${MONGODB_URI}
             DATABASE_NAME: ${DATABASE_NAME}
             COLLECTION_NAME: ${COLLECTION_NAME}
+            ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}
         restart: unless-stopped

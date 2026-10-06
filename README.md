@@ -1,8 +1,9 @@
 # temporärt under development av projekt
 
 Ändra i .env MONGODB_URI=mongodb://localhost:27017/testuser
-lägg till i .env för hashing password ACCESS_TOKEN_SECRET=ahvisst
+lägg till i .env för hashing password ACCESS_TOKEN_SECRET=
 kom ihåg att köra npm install det tillkommer mer dependencies
+Sen kör run seed för populating database
 ```bash
 npm run seed
 ```

@@ -1,5 +1,6 @@
 import asyncHandler from "express-async-handler";
 import Document from "../models/documentModel.js";
+import User from "../models/userModel.js";
 
 export const createDocument = asyncHandler(async (req, res) => {
   const { title, content, type } = req.body;
@@ -58,6 +59,45 @@ export const updateDocument = asyncHandler(async (req, res) => {
   document.type = req.body.type ?? document.type;
 
   const updated = await document.save();
+  res.status(200).json(updated);
+});
+
+export const shareDocument = asyncHandler(async (req, res) => {
+  const document = await Document.findById(req.params.id);
+
+  if (!document) {
+    res.status(404);
+    throw new Error("Document not found");
+  }
+
+  if (!document.owners.includes(req.user.id)) {
+    res.status(403);
+    throw new Error("Forbidden");
+  }
+
+  const { email } = req.body;
+
+  if (!email) {
+    res.status(400);
+    throw new Error("Email is required");
+  }
+
+  const user = await User.findOne({ email: email.toLowerCase() });
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  if (document.owners.some((owner) => owner.toString() === user._id.toString())) {
+    res.status(400);
+    throw new Error("Document is already shared with this user");
+  }
+
+  document.owners.push(user._id);
+
+  const updated = await document.save();
+
   res.status(200).json(updated);
 });
 

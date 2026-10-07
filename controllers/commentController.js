@@ -66,6 +66,13 @@ export const updateComment = asyncHandler(async (req, res) => {
   comment.lineNumber = req.body.lineNumber ?? comment.lineNumber;
 
   const updated = await comment.save();
+
+  const document = await Document.findById(comment.documentId);
+
+    // Skicka testnotis till Discord
+  notifiera(
+      `💬 Comment on "${document.title}" at line ${comment.lineNumber} has been updated.`
+  );
   res.status(200).json(updated);
 });
 

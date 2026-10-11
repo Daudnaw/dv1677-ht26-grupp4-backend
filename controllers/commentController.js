@@ -30,6 +30,10 @@ export const addComment = asyncHandler(async (req, res) => {
     text
   });
 
+  notifiera(
+      `💬 Comment on "${document.title}" at line ${comment.lineNumber} has been created.`
+  );
+
   res.status(201).json(comment);
 });
 

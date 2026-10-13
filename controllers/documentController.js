@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler";
 import Document from "../models/documentModel.js";
 import User from "../models/userModel.js";
+import Comment from "../models/commentModel.js";
 import notifiera from '../services/notify.js';
 
 export const createDocument = asyncHandler(async (req, res) => {
@@ -136,6 +137,7 @@ export const deleteDocument = asyncHandler(async (req, res) => {
     throw new Error("Forbidden");
   }
 
+  await Comment.deleteMany({ documentId: document._id });
   await document.deleteOne();
-  res.status(200).json({ message: "Document deleted" });
+  res.status(200).json({ message: "Document and its comments deleted" });
 });

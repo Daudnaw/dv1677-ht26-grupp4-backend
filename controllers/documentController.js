@@ -115,7 +115,7 @@ export const shareDocument = asyncHandler(async (req, res) => {
   document.owners.push(user._id);
 
   const updated = await document.save();
-   // Skicka testnotis till Discord
+
   notifiera(
       `📄 Dokumentet "${document.title}" has been shared with ${email}.`
   );

@@ -60,18 +60,10 @@ export const updateDocument = asyncHandler(async (req, res) => {
   document.content = req.body.content ?? document.content;
   document.type = req.body.type ?? document.type;
 
-  console.log('Skickar till rum:', `doc:${req.params.id}`);
-
   const room = `doc:${req.params.id}`;
   const io = req.app.get('io');
 
   const updated = await document.save();
-
-  console.log('Skickar till rum:', room);
-  console.log(
-    'Sockets i rummet:',
-    io?.sockets.adapter.rooms.get(room)
-  );
 
   io?.to(room).emit(
     'document:updated',

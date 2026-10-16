@@ -6,12 +6,15 @@ connectDB();
 
 
 const app = express();
-
-// Middleware
 app.use(cors());
-app.use(express.json());
 
-// Routes
+app.use((req, res, next) => {
+  req.io = app.get('io');
+
+  next();
+});
+
+app.use(express.json());
 app.use('/api', routes);
 
 // Root endpoint

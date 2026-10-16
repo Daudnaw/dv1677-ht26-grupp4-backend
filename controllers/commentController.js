@@ -34,6 +34,9 @@ export const addComment = asyncHandler(async (req, res) => {
       `💬 Comment on "${document.title}" at line ${comment.lineNumber} has been created.`
   );
 
+  const io = req.app.get("io");
+  io?.to(`doc:${documentId}`).emit("comment:created", comment);
+
   res.status(201).json(comment);
 });
 
@@ -74,7 +77,6 @@ export const updateComment = asyncHandler(async (req, res) => {
 
   const document = await Document.findById(comment.documentId);
 
-    // Skicka testnotis till Discord
   notifiera(
       `💬 Comment on "${document.title}" at line ${comment.lineNumber} has been updated.`
   );
@@ -95,5 +97,11 @@ export const deleteComment = asyncHandler(async (req, res) => {
   }
 
   await comment.deleteOne();
+
+  const io = req.app.get("io");
+  io?.to(`doc:${comment.documentId}`).emit("comment:deleted", {
+    _id: comment._id
+  });
+
   res.status(200).json({ message: "Comment deleted" });
 });

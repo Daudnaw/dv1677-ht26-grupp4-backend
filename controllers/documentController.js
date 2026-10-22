@@ -5,7 +5,7 @@ import Comment from "../models/commentModel.js";
 import notifiera from '../services/notify.js';
 
 export const createDocument = asyncHandler(async (req, res) => {
-  const { title, content, type } = req.body;
+  const { title, content, type, language } = req.body;
 
   if (!title || !type) {
     res.status(400);
@@ -16,6 +16,7 @@ export const createDocument = asyncHandler(async (req, res) => {
     title,
     content: content || "",
     type,
+    language: language || "javascript",
     owners: [req.user.id]
   });
 
@@ -59,6 +60,7 @@ export const updateDocument = asyncHandler(async (req, res) => {
   document.title = req.body.title ?? document.title;
   document.content = req.body.content ?? document.content;
   document.type = req.body.type ?? document.type;
+  document.language = req.body.language ?? document.language;
 
   const room = `doc:${req.params.id}`;
   const io = req.app.get('io');

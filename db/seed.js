@@ -1,26 +1,62 @@
-import fs from 'fs/promises';
-import { connectDB } from './database.js';
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+import User from "../models/userModel.js";
+import Document from "../models/documentModel.js";
+import Comment from "../models/commentModel.js";
 
-console.log("SEED STARTAR");
-const documents = JSON.parse(
-    await fs.readFile('./db/document.json', 'utf-8')
-);
+const dbURI = process.env.MONGODB_URI;
+const dbName = process.env.DATABASE_NAME;
 
-try {
-    const db = await connectDB();
+const seed = async () => {
+  await mongoose.connect(dbURI, {
+              dbName,
+          });
 
-    const collection = db.collection(
-        process.env.COLLECTION_NAME
-    );
+  await User.deleteMany();
+  await Document.deleteMany();
+  await Comment.deleteMany();
 
-    await collection.deleteMany({});
+  const password1 = await bcrypt.hash("test123", 10);
+  const password2 = await bcrypt.hash("test456", 10);
 
-    const result = await collection.insertMany(documents);
+  const user1 = await User.create({
+    email: "test1@example.com",
+    password: password1,
+    role: "user"
+  });
 
-    console.log(`Inserted ${result.insertedCount} documents`);
+  const user2 = await User.create({
+    email: "test2@example.com",
+    password: password2,
+    role: "user"
+  });
 
-    process.exit(0);
-} catch (error) {
-    console.error('Seed failed:', error);
-    process.exit(1);
-}
+  const document = await Document.create({
+    title: "Seeded Document1",
+    content: "Hello",
+    type: "text",
+    owners: [user1._id]
+  });
+
+  const comment1 = await Comment.create({
+    documentId: document._id,
+    userId: user1._id,
+    lineNumber: 1,
+    text: "test1 comment"
+  });
+
+  const comment2 = await Comment.create({
+    documentId: document._id,
+    userId: user2._id,
+    lineNumber: 2,
+    text: "test2 comment"
+  });
+
+  console.log("Users:", user1, user2);
+  console.log("Document:", document);
+  console.log("Comments:", comment1, comment2);
+
+  await mongoose.disconnect();
+};
+
+seed();

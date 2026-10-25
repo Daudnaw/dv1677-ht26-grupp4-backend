@@ -15,6 +15,11 @@ const documentSchema = new mongoose.Schema(
       enum: ["text", "code"],
       required: [true, "Please specify document type"]
     },
+    language: {
+      type: String,
+      enum: ["javascript", "python", "json", "html", "css"],
+      default: "javascript"
+    },
     owners: [
       {
         type: mongoose.Schema.Types.ObjectId,

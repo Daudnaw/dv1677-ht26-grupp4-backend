@@ -2,7 +2,7 @@ import asyncHandler from "express-async-handler";
 import Document from "../models/documentModel.js";
 import User from "../models/userModel.js";
 import Comment from "../models/commentModel.js";
-//import notifiera from '../services/notify.js';
+import notifiera from '../services/notify.js';
 
 export const createDocument = asyncHandler(async (req, res) => {
   const { title, content, type } = req.body;
@@ -108,11 +108,11 @@ export const shareDocument = asyncHandler(async (req, res) => {
   document.owners.push(user._id);
 
   const updated = await document.save();
-  /**
+
   notifiera(
       `📄 Dokumentet "${document.title}" has been shared with ${email}.`
   );
-   */
+
   res.status(200).json(updated);
 });
 

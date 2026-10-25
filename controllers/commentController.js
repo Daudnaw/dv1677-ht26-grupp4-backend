@@ -1,7 +1,7 @@
 import asyncHandler from "express-async-handler";
 import Comment from "../models/commentModel.js";
 import Document from "../models/documentModel.js";
-//import notifiera from '../services/notify.js';
+import notifiera from '../services/notify.js';
 
 export const addComment = asyncHandler(async (req, res) => {
   const { documentId, lineNumber, text } = req.body;
@@ -29,11 +29,11 @@ export const addComment = asyncHandler(async (req, res) => {
     lineNumber,
     text
   });
-  /**
+
   notifiera(
       `💬 Comment on "${document.title}" at line ${comment.lineNumber} has been created.`
   );
-   */
+
   const io = req.app.get("io");
   io?.to(`doc:${documentId}`).emit("comment:created", comment);
 
@@ -76,11 +76,11 @@ export const updateComment = asyncHandler(async (req, res) => {
   const updated = await comment.save();
 
   const document = await Document.findById(comment.documentId);
-  /**
+
   notifiera(
       `💬 Comment on "${document.title}" at line ${comment.lineNumber} has been updated.`
   );
-   */
+
   res.status(200).json(updated);
 });
 

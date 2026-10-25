@@ -59,7 +59,7 @@ export const updateDocument = asyncHandler(async (req, res) => {
   document.title = req.body.title ?? document.title;
   document.content = req.body.content ?? document.content;
   document.type = req.body.type ?? document.type;
-  /**
+
   const room = `doc:${req.params.id}`;
   const io = req.app.get('io');
 
@@ -69,7 +69,7 @@ export const updateDocument = asyncHandler(async (req, res) => {
     'document:updated',
     updated
   );
-   */
+
   res.status(200).json(updated);
 });
 

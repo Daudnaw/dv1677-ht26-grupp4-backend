@@ -4,8 +4,15 @@ import routes from '../routes.js';
 import connectDB from "./database.js";
 connectDB();
 
+
 const app = express();
 app.use(cors());
+
+app.use((req, res, next) => {
+  req.io = app.get('io');
+
+  next();
+});
 
 app.use(express.json());
 app.use('/api', routes);

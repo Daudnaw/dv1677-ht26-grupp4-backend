@@ -2,7 +2,7 @@
 
 Backend för grupp 4:s projekt i kursen DV1677 JavaScript-baserade webbramverk.
 
-Projektet är ett JSON-API byggt med Express och MongoDB. API:t används av gruppens separata React-frontend för att hämta, skapa, uppdatera och ta bort dokument.
+Projektet är ett JSON-API byggt med Express och MongoDB. API:ar används av gruppens separata React-frontend för att skapa och hantera TEXT-EDITOR.
 
 ## Gruppmedlemmar
 
@@ -19,6 +19,18 @@ Projektet är ett JSON-API byggt med Express och MongoDB. API:t används av grup
 - MongoDB Memory Server
 - Docker
 - GitHub Actions
+- Webbsocket-IO
+
+## GitHub-secrets
+
+Följande GitHub-secrets behövs.
+
+- ACCESS_TOKEN_SECRET
+- DISCORD_WEBHOOK_URL
+- MONGODB_URI
+- VPS_HOST
+- VPS_SSH_KEY
+- VPS_USER
 
 ## Driftsatt applikation
 
@@ -55,6 +67,8 @@ PORT=3000
 MONGODB_URI=<your-mongodb-uri>
 DATABASE_NAME=jsramverk
 COLLECTION_NAME=documents
+ACCESS_TOKEN_SECRET=yoursecretkey
+DISCORD_WEBHOOK_URL=getthehookfromdiscor
 ```
 
 `MONGODB_URI` ska ersättas med URI:n till den MongoDB-instans som ska användas.
@@ -69,7 +83,24 @@ Servern körs som standard på port 3000.
 
 ## API
 
-Backenden tillhandahåller ett JSON-API för dokument och innehåller routes för att hämta, skapa, uppdatera och ta bort dokument.
+Backenden tillhandahåller JSON-API för dokument, comments och users routes. Vilka routes som existerar totalt kan du se längre ner under rubrik test.
+
+## Database
+Projektet använder MongoDB Atlas, en molnbaserad NoSQL-databas.
+
+För att köra projektet behöver du skapa ett konto på MongoDB Atlas, skapa ett kluster och lägga till din anslutningssträng i filen .env:
+
+```bash
+MONGODB_URI=ERSÄTT_HÄR
+```
+
+### Models
+
+| Collection | Fields |
+|--- | --- |
+| `users` | `email`, `password`, `role`, `createdAt`, `updateAt` |
+| `documents` | `title`, `content`, `type`, `language`, `owners` (`userId[]`), `createdAt`, `updateAt` |
+| `comments` | `documentId`, `userId`, `lineNumber`, `text`, `createdAt` |
 
 ## Tester
 
@@ -85,13 +116,25 @@ MongoDB Memory Server används för att skapa en separat tillfällig MongoDB-dat
 
 Testsviten testar:
 
-- GET `/api/documents` - hämtar dokument
-- POST `/api/documents` - skapar ett dokument
-- GET `/api/documents` - verifierar att det skapade dokumentet finns
-- PUT `/api/documents/:id` - uppdaterar ett dokument
-- DELETE `/api/delete/:id` - tar bort ett dokument
+- POST `api/users/register`
+- POST `api/users/login`
+- GET `api/users/current`
 
-Testerna kontrollerar bland annat HTTP-statuskoder, JSON-svar och att dokumentens data är korrekt.
+- POST `api/documents` Create a document
+- GET `api/documents` Get all documents for a user
+- GET `api/documents/:id` Get a specifik document by id
+- PUT `api/documents/:id` Update a document
+- POST `api/documents/:id/share` Share a document with another user
+- DELETE `api/documents/:id` Delete a document
+
+- POST `api/comments` Add a comment
+- GET `api/documents/:documentId` Get comments for a specific document
+- PUT `api/documents/:id` Update a document
+- DELETE `api/documents/:id` Delete a document
+
+- Notification function which notifies to the discord server when some updates happens also is tested. 
+- Webbsocket_IO testas också.
+
 
 ## Deployment
 

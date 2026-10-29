@@ -1,0 +1,8 @@
+## Krav 5 - Notifiering via discord
+Den här kraven implementeras i backend `contollers/commentController.js`, `controllers/documentController.js` och `services/notify.js`.
+
+Vi har valt Discord Webhook för att skicka notifiering eftersom det upplevdes mer praktiskt med tanke på om en grupp människor som jobbar i en team och ska kunna få notifikationer på sin server om något händer. Vi skapade en server på discord och där får man notiser om följande händer: om en dokument delas med en annan användare då notifieras vem som har fått delat ett dokument med sig och vilket dokument, när en kommentar skapas då notifieras också på discord med dokument titel och radnummer samt om en kommentar uppdateras så får man också notis att kommentar i dokument titel på radnummer har uppdaterats.
+
+Konfigurationen hanteras med miljövariable DISCORD_WEBHOOK_URL så att webhooken inte behöver hårdkodas. Om miljövariabeln saknas då avslutas funktioner notifieraDiscord() direkt med return så att ingen notifiering skickas och inget fel kastas. 
+
+För att ett misslycakt anrop på notifiering inte ska påverka uppdatering av en kommentar eller delning av ett dokument använder vi try/catch i notifiera(). Om anropet misslyckas då loggas felet i konsolen men det stoppar inte resten av funktionaliteten. På det viset delas ett dokument, uppdateras en kommentar eller läggs till en kommentar även om notifiering skulle misslyckas. 

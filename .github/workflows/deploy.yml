@@ -1,9 +1,7 @@
 name: Deploy
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [ "main" ]
+    branches: [main, dev]
 permissions:
   contents: read
   packages: write
@@ -60,6 +58,8 @@ jobs:
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             DATABASE_NAME=jsramverk
             COLLECTION_NAME=documents
+            ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
+            DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}
             EOF
 
             # Alternativ A: imagen är publik — ingen inloggning behövs

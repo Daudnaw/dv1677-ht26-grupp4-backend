@@ -1,238 +1,281 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { readFileSync } from 'fs'
-import request from 'supertest'
-import { MongoMemoryServer } from 'mongodb-memory-server'
-//import app from '../db/app.js'
-import { connectDB, closeDB } from '../db/database.js'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import request from 'supertest';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import connectDB, { closeDB } from '../db/database.js';
+import mongoose from 'mongoose';
 
 let mongod;
-let documentId;
 let app;
+let ownerToken;
+let otherToken;
+let documentId;
+
+const owner = {
+  email: 'owner@example.com',
+  password: 'Test123'
+};
+
+const other = {
+  email: 'other@example.com',
+  password: 'Test123'
+};
+
+async function registerAndLogin(user) {
+  const registerResponse = await request(app)
+    .post('/api/users/register')
+    .send(user);
+
+  expect(registerResponse.status).toBe(201);
+
+  const loginResponse = await request(app)
+    .post('/api/users/login')
+    .send(user);
+
+  expect(loginResponse.status).toBe(200);
+
+  return loginResponse.body.accessToken;
+}
+
+async function createTestDocument(token, data = {}) {
+  return request(app)
+    .post('/api/documents')
+    .set('Authorization', `Bearer ${token}`)
+    .send({
+      title: 'Test document',
+      content: 'Initial content',
+      type: 'text',
+      ...data
+    });
+}
 
 beforeAll(async () => {
-  process.env.COLLECTION_NAME = 'documents';
+  process.env.ACCESS_TOKEN_SECRET = 'test-secret-for-jwt';
 
-  mongod = await MongoMemoryServer.create()
-  process.env.MONGODB_URI = mongod.getUri()
-  process.env.DATABASE_NAME = 'jsramverk_test'
+  mongod = await MongoMemoryServer.create();
 
+  process.env.MONGODB_URI = mongod.getUri();
+  process.env.DATABASE_NAME = 'jsramverk_test';
+
+  // Import the app after setup test
   const module = await import('../db/app.js');
   app = module.default;
 
-  // Seed med kursdata så att testerna har något att arbeta med
-  const docs = JSON.parse(readFileSync('db/document.json', 'utf-8'))
-  const db = await connectDB();
-  await db.collection('documents').insertMany(docs)
-})
+  await connectDB();
+
+  ownerToken = await registerAndLogin(owner);
+  otherToken = await registerAndLogin(other);
+
+  // Create a document owned by the first user(0wner)
+  const response = await createTestDocument(ownerToken);
+
+  expect(response.status).toBe(201);
+  documentId = response.body._id;
+});
 
 afterAll(async () => {
-  await closeDB()
-  await mongod.stop()
-})
-
-describe('documents', () => {
-    describe('GET /api/documents', () => {
-        it('200 HAPPY PATH', async () => {
-            const res = await request(app)
-                .get('/api/documents');
-
-            expect(res.status).toBe(200);
-            expect(res.body).toBeInstanceOf(Array);
-            expect(res.body).toHaveLength(3);
-        });
-    });
-
-    describe('POST /api/documents', () => {
-        it('201 Creating document', async () => {
-            const data = {
-                title: 'doc_1',
-                content: 'i have one content'
-            };
-
-            const res = await request(app)
-                .post('/api/documents')
-                .send(data);
-
-            expect(res.status).toBe(201);
-            expect(res.body).toBeInstanceOf(Object);
-            expect(res.body).toHaveProperty('_id');
-
-            expect(res.body.title).toBe('doc_1');
-            expect(res.body.content).toBe('i have one content');
-
-            documentId = res.body._id;
-        });
-
-        it('200 Fetching the newly created document', async () => {
-            const res = await request(app)
-                .get('/api/documents');
-
-            expect(res.status).toBe(200);
-            expect(res.body).toBeInstanceOf(Array);
-            expect(res.body).toHaveLength(4);
-
-            const document = res.body.find(
-                doc => doc._id === documentId
-            );
-
-            expect(document).toBeDefined();
-            expect(document.title).toBe('doc_1');
-            expect(document.content).toBe('i have one content');
-        });
-    });
-
-    describe('PUT /api/documents/:id', () => {
-        it('200 Updating document', async () => {
-            const data = {
-                title: 'doc_1 updated',
-                content: 'updated content'
-            };
-
-            const res = await request(app)
-                .put(`/api/documents/${documentId}`)
-                .send(data);
-
-            expect(res.status).toBe(200);
-            expect(res.body).toBeInstanceOf(Object);
-            expect(res.body).toHaveProperty('_id');
-            expect(res.body.title).toBe('doc_1 updated');
-            expect(res.body.content).toBe('updated content');
-        });
-    });
-
-    describe('DELETE /api/delete/:id', () => {
-        it('200 Deleting document', async () => {
-            const res = await request(app)
-                .delete(`/api/delete/${documentId}`);
-
-            expect(res.status).toBe(200);
-            expect(res.body).toBeInstanceOf(Object);
-            expect(res.body).toHaveProperty('message');
-            expect(res.body.message).toBe('Document deleted');
-        });
-    });
+  await closeDB();
+  await mongod?.stop();
 });
 
+describe('Documents API', () => {
+  describe('POST /api/documents', () => {
+    it('creates a document when authenticated', async () => {
+      const res = await createTestDocument(ownerToken, {
+        title: 'A new document',
+        content: 'Hello world',
+        type: 'text'
+      });
 
-/**
-process.env.NODE_ENV = 'test';
-
-import * as chai from 'chai';
-import { default as chaiHttp, request } from 'chai-http';
-import server from '../db/app.js';
-import { connectDB } from '../db/database.js';
-
-// collection name
-const COLL_NAME = process.env.COLLECTION_NAME;
-
-chai.use(chaiHttp);
-
-chai.should();
-
-let documentId;
-
-describe('documents', () => {
-    before(() => {
-        return new Promise(async (resolve) => {
-            const db = await connectDB();
-            
-            try {
-                await db.collection(COLL_NAME).drop();
-            } catch(error) {
-                console.error(error);
-            } finally {
-                resolve();
-            }
-        });
+      expect(res.status).toBe(201);
+      expect(res.body.title).toBe('A new document');
+      expect(res.body.content).toBe('Hello world');
+      expect(res.body.type).toBe('text');
+      expect(res.body.owners).toContain(
+        res.body.owners[0]
+      );
+      expect(res.body._id).toBeTruthy();
     });
 
-    describe('GET /api/documents', () => {
-        it('200 HAPPY PATH', (done) => {
-            request.execute(server)
-                .get("/api/documents")
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.be.an("array");
-                    res.body.should.have.length(0);
-
-                    done();
-                });
+    it('rejects requests without a token', async () => {
+      const res = await request(app)
+        .post('/api/documents')
+        .send({
+          title: 'Unauthorized document',
+          type: 'text'
         });
+
+      expect(res.status).toBe(401);
     });
 
-    describe('POST /api/documents', () => {
-        it('201 Creating document', (done) => {
-            const data = {
-                titel: "doc_1",
-                content: "i have one content",
-            }
-
-
-            request.execute(server)
-                .post("/api/documents")
-                .send(data)
-                .end((err, res) => {
-                    res.should.have.status(201);
-                    res.body.should.be.an("object");
-                    res.body.should.have.property("_id");
-
-                    documentId = res.body._id;
-
-                    done();
-                });
+    it('rejects a document without required felds', async () => {
+      const res = await request(app)
+        .post('/api/documents')
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({
+          content: 'Missing title and type'
         });
 
-        it('200 Fetching the newly created document', (done) => {
-            request.execute(server)
-                .get("/api/documents")
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.be.an("array");
-                    res.body.should.have.length(1);
-                    res.body[0].should.be.an("object");
-                    res.body[0].titel.should.equal("doc_1");
+      expect(res.status).toBe(400);
+    });
+  });
 
+  describe('GET /api/documents', () => {
+    it('returns documents belonging to the authenticated user', async () => {
+      const res = await request(app)
+        .get('/api/documents')
+        .set('Authorization', `Bearer ${ownerToken}`);
 
-                    done();
-                });
-        });
+      expect(res.status).toBe(200);
+      expect(res.body).toBeInstanceOf(Array);
+
+      expect(
+        res.body.some((doc) => doc._id === documentId)
+      ).toBe(true);
     });
 
-    describe('PUT /api/documents/:id', () => {
-        it('200 Updating document', (done) => {
-            const data = {
-                titel: "doc_1 updated",
-                content: "updated content",
-            };
+    it('returns an empty array for a user without documents', async () => {
+      const res = await request(app)
+        .get('/api/documents')
+        .set('Authorization', `Bearer ${otherToken}`);
 
-            request.execute(server)
-                .put(`/api/documents/${documentId}`)
-                .send(data)
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.be.an("object");
-                    res.body.should.have.property("_id");
-                    res.body.titel.should.equal("doc_1 updated");
-                    res.body.content.should.equal("updated content");
-
-                    done();
-                });
-        });
-    })
-
-    describe('DELETE /api/delete/:id', () => {
-        it('200 Deleting document', (done) => {
-            request.execute(server)
-                .delete(`/api/delete/${documentId}`)
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.be.an("object");
-                    res.body.should.have.property("message");
-                    res.body.message.should.equal("Document deleted");
-
-                    done();
-                });
-        });
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual([]);
     });
+
+    it('rejects requests without token', async () => {
+      const res = await request(app)
+        .get('/api/documents');
+
+      expect(res.status).toBe(401);
+    });
+  });
+
+  describe('GET /api/documents/:id', () => {
+    it('returns a document owned by the user', async () => {
+      const res = await request(app)
+        .get(`/api/documents/${documentId}`)
+        .set('Authorization', `Bearer ${ownerToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body._id).toBe(documentId);
+      expect(res.body.title).toBe('Test document');
+    });
+
+    it('rejects access by a different user', async () => {
+      const res = await request(app)
+        .get(`/api/documents/${documentId}`)
+        .set('Authorization', `Bearer ${otherToken}`);
+
+      expect(res.status).toBe(403);
+    });
+
+    it('returns 404 for nonexistent document', async () => {
+      const nonexistentId = new mongoose.Types.ObjectId();
+
+      const res = await request(app)
+        .get(`/api/documents/${nonexistentId}`)
+        .set('Authorization', `Bearer ${ownerToken}`);
+
+      expect(res.status).toBe(404);
+    });
+  });
+
+  describe('PUT /api/documents/:id', () => {
+    it('updates a document owned by the user', async () => {
+      const res = await request(app)
+        .put(`/api/documents/${documentId}`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({
+          title: 'Updated title',
+          content: 'Updated content'
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.title).toBe('Updated title');
+      expect(res.body.content).toBe('Updated content');
+    });
+
+    it('rejects updates by a different user', async () => {
+      const res = await request(app)
+        .put(`/api/documents/${documentId}`)
+        .set('Authorization', `Bearer ${otherToken}`)
+        .send({
+          title: 'Unauthorized update'
+        });
+
+      expect(res.status).toBe(403);
+    });
+  });
+
+  describe('POST /api/documents/:id/share', () => {
+    it('shares a document with another registered user', async () => {
+      const res = await request(app)
+        .post(`/api/documents/${documentId}/share`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({
+          email: other.email
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.owners).toHaveLength(2);
+      expect(
+        res.body.owners.map((id) => id.toString())
+      ).toContain(
+        res.body.owners[1].toString()
+      );
+    });
+
+    it('rejects sharing without an email', async () => {
+      const doc = await createTestDocument(ownerToken);
+
+      const res = await request(app)
+        .post(`/api/documents/${doc.body._id}/share`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({});
+
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects sharing by a user who is not an owner', async () => {
+      const doc = await createTestDocument(ownerToken);
+
+      const res = await request(app)
+        .post(`/api/documents/${doc.body._id}/share`)
+        .set('Authorization', `Bearer ${otherToken}`)
+        .send({
+          email: other.email
+        });
+
+      expect(res.status).toBe(403);
+    });
+  });
+
+  describe('DELETE /api/documents/:id', () => {
+    it('rejects deletion by a different user', async () => {
+      const doc = await createTestDocument(ownerToken);
+
+      const res = await request(app)
+        .delete(`/api/documents/${doc.body._id}`)
+        .set('Authorization', `Bearer ${otherToken}`);
+
+      expect(res.status).toBe(403);
+    });
+
+    it('deletes a document owned by the user', async () => {
+      const doc = await createTestDocument(ownerToken);
+
+      const res = await request(app)
+        .delete(`/api/documents/${doc.body._id}`)
+        .set('Authorization', `Bearer ${ownerToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toBe('Document and its comments deleted');
+
+      const getRes = await request(app)
+        .get(`/api/documents/${doc.body._id}`)
+        .set('Authorization', `Bearer ${ownerToken}`);
+
+      expect(getRes.status).toBe(404);
+    });
+  });
 });
- */
